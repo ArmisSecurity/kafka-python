@@ -736,7 +736,7 @@ class ConsumerCoordinator(BaseCoordinator):
                 self.group_id,
                 list(topic_partitions.items())
             )
-        if self.config['api_version'] >= (0, 10, 2):
+        elif self.config['api_version'] >= (0, 10, 2):
             request = OffsetFetchRequest[2](
                 self.group_id,
                 list(topic_partitions.items())
