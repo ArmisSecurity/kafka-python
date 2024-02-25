@@ -731,8 +731,13 @@ class ConsumerCoordinator(BaseCoordinator):
         for tp in partitions:
             topic_partitions[tp.topic].add(tp.partition)
 
-        if self.config['api_version'] >= (0, 10, 2):
+        if self.config['api_version'] >= (2, 0, 0):
             request = OffsetFetchRequest[3](
+                self.group_id,
+                list(topic_partitions.items())
+            )
+        if self.config['api_version'] >= (0, 10, 2):
+            request = OffsetFetchRequest[2](
                 self.group_id,
                 list(topic_partitions.items())
             )
@@ -755,7 +760,6 @@ class ConsumerCoordinator(BaseCoordinator):
         return future
 
     def _handle_offset_fetch_response(self, future, response):
-        offsets = {}
         if response.API_VERSION > 1:
             error_type = Errors.for_code(response.error_code)
             if error_type is not Errors.NoError:
@@ -763,6 +767,7 @@ class ConsumerCoordinator(BaseCoordinator):
                           error_type)
                 future.failure(error_type())
                 return
+        offsets = {}
         for topic, partitions in response.topics:
             for partition, offset, metadata, error_code in partitions:
                 tp = TopicPartition(topic, partition)
